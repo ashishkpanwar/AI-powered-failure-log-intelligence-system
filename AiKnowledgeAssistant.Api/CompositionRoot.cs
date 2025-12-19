@@ -1,9 +1,7 @@
 ﻿using AiKnowledgeAssistant.Application.AI;
-using AiKnowledgeAssistant.Application.Rag.Implementation;
-using AiKnowledgeAssistant.Application.Rag.Interface;
-using AiKnowledgeAssistant.Application.Search.Interface;
+using AiKnowledgeAssistant.Application.Failures;
+using AiKnowledgeAssistant.Application.Failures.Interfaces;
 using AiKnowledgeAssistant.Infrastructure.AI;
-using AiKnowledgeAssistant.Infrastructure.Search;
 using Azure;
 using Azure.AI.OpenAI;
 using Azure.Search.Documents;
@@ -52,8 +50,7 @@ namespace AiKnowledgeAssistant.Api
 
             services.AddSingleton<IAiClient, AzureOpenAiClient>();
             services.AddSingleton<IAiEmbeddingClient, AzureOpenAiEmbeddingClient>();
-            services.AddSingleton<IVectorSearchStore, AzureVectorSearchStore>();
-            services.AddSingleton<IRagService, RagService>();
+            services.AddSingleton<IFailureRetrievalService, FailureRetrievalService>();
 
         }
     }

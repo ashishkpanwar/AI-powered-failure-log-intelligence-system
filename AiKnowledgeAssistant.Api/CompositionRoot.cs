@@ -2,6 +2,7 @@
 using AiKnowledgeAssistant.Application.Failures;
 using AiKnowledgeAssistant.Application.Failures.Interfaces;
 using AiKnowledgeAssistant.Infrastructure.AI;
+using AiKnowledgeAssistant.Infrastructure.Search;
 using Azure;
 using Azure.AI.OpenAI;
 using Azure.Search.Documents;
@@ -50,6 +51,7 @@ namespace AiKnowledgeAssistant.Api
 
             services.AddSingleton<IAiClient, AzureOpenAiClient>();
             services.AddSingleton<IAiEmbeddingClient, AzureOpenAiEmbeddingClient>();
+            services.AddScoped<IFailureVectorStore, FailureVectorSearchStore>();
             services.AddSingleton<IFailureRetrievalService, FailureRetrievalService>();
 
         }

@@ -4,21 +4,24 @@ using AiKnowledgeAssistant.Ingestion.Application.Pipeline;
 using AiKnowledgeAssistant.Ingestion.Infrastructure.LogSources;
 using AiKnowledgeAssistant.Ingestion.Infrastructure.Search;
 using Azure;
+using Azure.AI.OpenAI;
 using Azure.Search.Documents;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using OpenAI.Embeddings;
 
 var host = Host.CreateDefaultBuilder(args)
     .ConfigureAppConfiguration((context, config) =>
     {
-        config.AddJsonFile("appsettings.json", optional: false);
+        config.AddJsonFile("appsettings.json", optional: true);
     })
-    .ConfigureServices(services =>
+    .ConfigureServices((config, services) =>
     {
+        var configuration = config.Configuration;
         // 🔹 Log source (mock for now)
         services.AddSingleton<ILogSource>(_ =>
-            new JsonFileLogSource("mock-logs"));
+            new JsonFileLogSource(configuration["Ingestion:LogDirectory"]!));
 
         // 🔹 Normalizer
         services.AddSingleton<ILogNormalizer, DefaultLogNormalizer>();
@@ -26,17 +29,35 @@ var host = Host.CreateDefaultBuilder(args)
         // 🔹 Azure AI Search client
         services.AddSingleton(_ =>
         {
-            var endpoint = new Uri("<SEARCH-ENDPOINT>");
-            var apiKey = new AzureKeyCredential("<SEARCH-API-KEY>");
-            return new SearchClient(endpoint, "<INDEX-NAME>", apiKey);
+            var endpoint = new Uri(configuration["AzureSearchService:Endpoint"]!);
+            var apiKey = new AzureKeyCredential(configuration["AzureSearchService:ApiKey"]!);
+            return new SearchClient(endpoint, configuration["AzureSearchService:IndexName"]!, apiKey);
+        });
+
+        services.AddSingleton(sp =>
+        {
+            var endpoint = new Uri(configuration["AzureOpenAI:Endpoint"]!);
+            var key = configuration["AzureOpenAI:ApiKey"]!;
+            return new AzureOpenAIClient(endpoint, new AzureKeyCredential(key));
         });
 
         // 🔹 Embedding generator (reuse existing logic / client)
         services.AddSingleton<Func<string, CancellationToken, Task<float[]>>>(
-            _ => async (text, ct) =>
+            sp => async (text, ct) =>
             {
-                // Plug your existing AzureOpenAiEmbeddingClient here
-                throw new NotImplementedException("Wire embedding client");
+                try
+                {
+                    var azureClient = sp.GetRequiredService<AzureOpenAIClient>();
+                    var deployment = configuration["AzureOpenAI:EmbeddingDeployment"]!;
+                    var _embeddingClient = azureClient.GetEmbeddingClient(deployment);
+                    var response = await _embeddingClient.GenerateEmbeddingAsync(text,null,ct);
+                     return response.Value.ToFloats().ToArray();
+                
+                }
+                catch (Exception ex)
+                {
+                    throw new NotImplementedException("Wire embedding client");
+                }
             });
 
         services.AddSingleton<FailureIngestionService>();
@@ -44,11 +65,13 @@ var host = Host.CreateDefaultBuilder(args)
     })
     .Build();
 
-    await host.RunAsync();
+    using (host)
+    {
+        var pipeline =
+            host.Services.GetRequiredService<FailureIngestionPipeline>();
 
-    var pipeline = host.Services.GetRequiredService<FailureIngestionPipeline>();
-
-    await pipeline.RunAsync(
-        from: DateTimeOffset.UtcNow.AddDays(-2),
-        to: DateTimeOffset.UtcNow,
-        cancellationToken: CancellationToken.None);
+        await pipeline.RunAsync(
+            from: DateTimeOffset.UtcNow.AddDays(-2),
+            to: DateTimeOffset.UtcNow,
+            cancellationToken: CancellationToken.None);
+    }

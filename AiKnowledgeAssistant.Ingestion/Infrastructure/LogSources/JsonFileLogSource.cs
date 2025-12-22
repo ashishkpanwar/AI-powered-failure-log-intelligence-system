@@ -19,8 +19,11 @@ public sealed class JsonFileLogSource : ILogSource
         CancellationToken cancellationToken)
     {
         var results = new List<RawLogEntry>();
+        var basePath = AppContext.BaseDirectory;
+        var logDirectory = Path.GetFullPath(
+            Path.Combine(basePath, _directoryPath));
 
-        if (!Directory.Exists(_directoryPath))
+        if (!Directory.Exists(logDirectory))
             return results;
 
         var files = Directory.GetFiles(_directoryPath, "*.json");

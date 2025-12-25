@@ -1,16 +1,21 @@
-using System.Text.Json;
-using AiKnowledgeAssistant.Ingestion.Application.Abstractions;
+﻿using AiKnowledgeAssistant.Ingestion.Application.Abstractions;
+using AiKnowledgeAssistant.Ingestion.Application.Mapping;
 using AiKnowledgeAssistant.Ingestion.Application.Models;
+using Microsoft.Extensions.Hosting;
+using System;
+using System.Text.Json;
 
 namespace AiKnowledgeAssistant.Ingestion.Infrastructure.LogSources;
 
 public sealed class JsonFileLogSource : ILogSource
 {
     private readonly string _directoryPath;
+    private readonly IHostEnvironment _environment; // You need to implement or inject this
 
-    public JsonFileLogSource(string directoryPath)
+    public JsonFileLogSource(string directoryPath, IHostEnvironment environment)
     {
         _directoryPath = directoryPath;  //D:\AI-powered failure & log intelligence system\AiKnowledgeAssistant.Ingestion\mock-logs\
+        _environment = environment;
     }
 
     public async Task<IReadOnlyList<RawLogEntry>> FetchAsync(
@@ -19,11 +24,11 @@ public sealed class JsonFileLogSource : ILogSource
         CancellationToken cancellationToken)
     {
         var results = new List<RawLogEntry>();
-        var basePath = AppContext.BaseDirectory;
+        var basePath = _environment.ContentRootPath;
         var logDirectory = Path.GetFullPath(
             Path.Combine(basePath, _directoryPath));
 
-        if (!Directory.Exists(logDirectory))
+        if (!Directory.Exists(_directoryPath))
             return results;
 
         var files = Directory.GetFiles(_directoryPath, "*.json");
@@ -32,22 +37,25 @@ public sealed class JsonFileLogSource : ILogSource
         {
             await using var stream = File.OpenRead(file);
 
-            var logs = await JsonSerializer.DeserializeAsync<List<RawLogEntry>>(
+            var dtos = await JsonSerializer.DeserializeAsync<List<RawLogEntryDto>>(
                 stream,
-                cancellationToken: cancellationToken);
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                },cancellationToken);
 
-            if (logs is null)
+            if (dtos is null)
                 continue;
 
-            results.AddRange(logs.Where(log=> log.Timestamp >= from && log.Timestamp <= to));
-
-            //foreach (var log in logs)
-            //{
-            //    if (log.Timestamp >= from && log.Timestamp <= to)
-            //    {
-            //        results.Add(log);
-            //    }
-            //}
+            foreach (var dto in dtos)
+            {
+                if (RawLogEntryMapper.TryMap(dto, out var entry))
+                {
+                    if (entry.Timestamp >= from && entry.Timestamp <= to)
+                        results.Add(entry);
+                }
+                // else → bad log, ignored intentionally
+            }
         }
 
         return results;

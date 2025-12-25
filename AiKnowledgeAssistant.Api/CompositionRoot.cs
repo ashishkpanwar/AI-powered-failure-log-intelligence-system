@@ -20,21 +20,21 @@ namespace AiKnowledgeAssistant.Api
         {
 
 
-            services.AddSingleton(sp =>
+            services.AddScoped(sp =>
             {
                 var endpoint = new Uri(configuration["AzureOpenAI:Endpoint"]!);
                 var key = configuration["AzureOpenAI:ApiKey"]!;
                 return new AzureOpenAIClient(endpoint, new AzureKeyCredential(key));
             });
 
-            services.AddSingleton(sp =>
+            services.AddScoped(sp =>
             {
                 var azureClient = sp.GetRequiredService<AzureOpenAIClient>();
                 var deployment = configuration["AzureOpenAI:EmbeddingDeployment"]!;
                 return azureClient.GetEmbeddingClient(deployment);
             });
 
-            services.AddSingleton(sp =>
+            services.AddScoped(sp =>
             {
                 var endpoint = new Uri(configuration["AzureSearchService:Endpoint"]!);
                 var index = configuration["AzureSearchService:IndexName"]!;
@@ -43,7 +43,7 @@ namespace AiKnowledgeAssistant.Api
                 return new SearchClient(endpoint, index, new AzureKeyCredential(apiKey));
             });
 
-            services.AddSingleton(sp =>
+            services.AddScoped(sp =>
             {
                 var azureClient = sp.GetRequiredService<AzureOpenAIClient>();
                 var chatDeployment = configuration["AzureOpenAI:ChatDeployment"]!;
@@ -51,13 +51,14 @@ namespace AiKnowledgeAssistant.Api
             });
 
 
-            services.AddSingleton<IAiClient, AzureOpenAiClient>();
-            services.AddSingleton<IAiEmbeddingClient, AzureOpenAiEmbeddingClient>();
+            services.AddScoped<IAiClient, AzureOpenAiClient>();
+            services.AddScoped<IAiEmbeddingClient, AzureOpenAiEmbeddingClient>();
             services.AddScoped<IFailureVectorStore, FailureVectorSearchStore>();
-            services.AddSingleton<IFailureRetrievalService, FailureRetrievalService>();
-            services.AddSingleton<IFailureInsightBuilder, FailureInsightBuilder>();
-            services.AddSingleton<ITokenGuardrail, DefaultTokenGuardrail>();
-            services.AddSingleton<IFailureExplanationService, FailureExplanationService>();
+            services.AddScoped<IFailureRetrievalService, FailureRetrievalService>();
+            services.AddScoped<IFailureInsightBuilder, FailureInsightBuilder>();
+            services.AddScoped<ITokenGuardrail, DefaultTokenGuardrail>();
+            services.AddScoped<IFailureExplanationService, FailureExplanationService>();
+            services.AddScoped<IFailureAnalysisService, FailureAnalysisService>();
 
         }
     }

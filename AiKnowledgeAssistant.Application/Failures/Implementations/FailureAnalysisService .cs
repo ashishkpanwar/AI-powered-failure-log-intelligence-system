@@ -24,9 +24,16 @@ namespace AiKnowledgeAssistant.Application.Failures.Implementations
             FailureAnalysisRequest request,
             CancellationToken cancellationToken)
         {
+            var query = new FindSimilarFailuresQuery(
+                    Environment: request.Environment,
+                    JobId: request.JobId,
+                    MinSeverity: request.MinSeverity,
+                    OnlyActive: request.OnlyActive,
+                    Question: request.Question
+                );
             // 1️
             var failures = await _retrievalService.FindSimilarAsync(
-                request.SimilarFailures,
+                query,
                 cancellationToken);
 
             // 2️ Deterministic insights

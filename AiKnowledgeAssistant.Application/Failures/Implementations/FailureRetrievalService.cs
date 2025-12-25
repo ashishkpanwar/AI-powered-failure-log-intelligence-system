@@ -23,7 +23,7 @@ public sealed class FailureRetrievalService : IFailureRetrievalService
         CancellationToken cancellationToken)
     {
         var embedding = await _embeddingClient.GenerateEmbeddingAsync(
-            query.Content,
+            query.Question,
             cancellationToken);
 
         var filter = BuildFilter(query);

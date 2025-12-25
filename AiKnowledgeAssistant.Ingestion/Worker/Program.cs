@@ -12,6 +12,7 @@ using Microsoft.Extensions.Hosting;
 using OpenAI.Embeddings;
 
 var host = Host.CreateDefaultBuilder(args)
+    .UseContentRoot(Directory.GetCurrentDirectory())
     .ConfigureAppConfiguration((context, config) =>
     {
         config.AddJsonFile("appsettings.json", optional: true);
@@ -20,8 +21,11 @@ var host = Host.CreateDefaultBuilder(args)
     {
         var configuration = config.Configuration;
         // 🔹 Log source (mock for now)
-        services.AddSingleton<ILogSource>(_ =>
-            new JsonFileLogSource(configuration["Ingestion:LogDirectory"]!));
+        services.AddSingleton<ILogSource>(sp =>
+            {
+                var env = sp.GetRequiredService<IHostEnvironment>();
+                return new JsonFileLogSource(configuration["Ingestion:LogDirectory"]!, env);
+            });
 
         // 🔹 Normalizer
         services.AddSingleton<ILogNormalizer, DefaultLogNormalizer>();
@@ -71,7 +75,7 @@ var host = Host.CreateDefaultBuilder(args)
             host.Services.GetRequiredService<FailureIngestionPipeline>();
 
         await pipeline.RunAsync(
-            from: DateTimeOffset.UtcNow.AddDays(-2),
+            from: DateTimeOffset.UtcNow.AddMonths(-4),
             to: DateTimeOffset.UtcNow,
             cancellationToken: CancellationToken.None);
     }

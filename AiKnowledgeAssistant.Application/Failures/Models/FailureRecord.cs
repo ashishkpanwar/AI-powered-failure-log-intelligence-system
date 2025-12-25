@@ -9,7 +9,7 @@ public sealed class FailureRecord
     public string Id { get; init; } = default!;
     public string Content { get; init; } = default!;
     public DateTimeOffset Timestamp { get; init; }
-    public string ServiceName { get; init; } = default!;
+    public required string JobId { get; init; }
     public string WorkflowName { get; init; } = default!;
     public string Environment { get; init; } = default!;
     public string ErrorType { get; init; } = default!;

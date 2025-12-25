@@ -7,7 +7,12 @@ namespace AiKnowledgeAssistant.Application.Failures.Models
 {
     public sealed class FailureAnalysisRequest
     {
-        public FindSimilarFailuresQuery SimilarFailures { get; init; } = default!;
+        public required string Environment { get; init; }
+        public required string JobId { get; init; }
+
+        public int MinSeverity { get; init; } = 3;
+        public bool OnlyActive { get; init; } = true;
+
         public string? Question { get; init; }
     }
 }

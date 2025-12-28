@@ -1,10 +1,11 @@
-﻿using AiKnowledgeAssistant.Application.Failures.Models;
+﻿using AiKnowledgeAssistant.Application.Failures.Interfaces;
+using AiKnowledgeAssistant.Application.Failures.Models;
 using AiKnowledgeAssistant.Infrastructure.Repositories.Interfaces;
 using AiKnowledgeAssistant.Infrastructure.Repositories.Models;
 
 namespace AiKnowledgeAssistant.Application.Failures.Implementations
 {
-    public sealed class FailureWindowResolver
+    public sealed class FailureWindowResolver: IFailureWindowResolver
     {
         private readonly IJobExecutionReader _jobRepository;
 

@@ -1,11 +1,12 @@
-﻿using AiKnowledgeAssistant.Application.Failures.Models;
+﻿using AiKnowledgeAssistant.Application.Failures.Interfaces;
+using AiKnowledgeAssistant.Application.Failures.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace AiKnowledgeAssistant.Application.Failures.Implementations
 {
-    public sealed class FailureSummaryBuilder
+    public sealed class FailureSummaryBuilder: IFailureSummaryBuilder
     {
         public FailureTechnicalSummary Build(IReadOnlyList<FailureRecord> records)
         {
@@ -32,9 +33,10 @@ namespace AiKnowledgeAssistant.Application.Failures.Implementations
                     .ToDictionary(g => g.Key, g => g.Count()),
 
                 CommonErrorMessages = records
-                    .Select(r => r.Content)
-                    .Distinct()
+                    .GroupBy(r => r.Content)
+                    .OrderByDescending(g => g.Count())
                     .Take(3)
+                    .Select(g => g.Key)
                     .ToList(),
 
                 Confidence = confidence

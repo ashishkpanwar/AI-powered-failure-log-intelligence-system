@@ -1,8 +1,5 @@
 ﻿using AiKnowledgeAssistant.Application.Failures.Interfaces;
 using AiKnowledgeAssistant.Application.Failures.Models;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace AiKnowledgeAssistant.Application.Failures.Implementations
 {

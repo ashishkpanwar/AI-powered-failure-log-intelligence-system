@@ -7,29 +7,44 @@ namespace AiKnowledgeAssistant.Application.Helpers
 {
     public static class FailureExplanationPromptBuilder
     {
-        public static string Build(FailureInsight insight)
-        {
-            return $"""
-            You are an assistant helping engineers understand job failures.
+        private static string BuildPrompt(
+        FailureTechnicalSummary jobSummary,
+        WindowInsights insights)
+            {
+                var recurrenceText = insights.IsRecurringFailure
+                    ? $"This job is part of a sequence of {insights.FailedJobCount} failed runs."
+                    : "This appears to be the first failure after a successful run.";
 
-            Failure summary:
-            - Known failure: {insight.IsKnownFailure}
-            - Current severity: {insight.CurrentSeverity}
-            - Historical severity range: {insight.MinSeverityObserved}–{insight.MaxSeverityObserved}
-            - Occurrence count: {insight.OccurrenceCount}
-            - Last seen: {insight.LastSeenAt}
-            - Active failures present: {insight.HasActiveFailures}
+                return $"""
+                You are assisting with failure analysis.
 
+                Current job failure details:
+                - Error types: {string.Join(", ", jobSummary.ErrorTypes.Keys)}
+                - Common messages: {string.Join(" | ", jobSummary.CommonErrorMessages)}
+                - Job First Failed at : {jobSummary.FirstFailureAt}
+                - Last failure occurred at: {jobSummary.LastFailureAt}
+                
 
-            Rules:
-            - Answer only using the failure summary
-            - Do not invent causes
-            - Do not speculate beyond the data
-            - Be concise and operational
-            - If information is insufficient, say so
-            """;
+                Context:
+                {recurrenceText}
+
+                Instructions:
+                - Explain what happened in simple terms
+                - Do NOT guess the root cause
+                - Do NOT suggest fixes
+                - Be concise and cautious
+                """;
+            }
+
         }
+
+    internal sealed class WindowInsights
+    {
+        public int FailedJobCount { get; init; }
+        public bool IsRecurringFailure => FailedJobCount > 1;
+        public IReadOnlyList<string> CommonErrorTypes { get; init; } = [];
     }
+
 
 
 }

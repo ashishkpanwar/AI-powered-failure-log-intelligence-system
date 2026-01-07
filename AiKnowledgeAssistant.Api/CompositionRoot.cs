@@ -4,10 +4,12 @@ using AiKnowledgeAssistant.Application.Failures;
 using AiKnowledgeAssistant.Application.Failures.Implementations;
 using AiKnowledgeAssistant.Application.Failures.Interfaces;
 using AiKnowledgeAssistant.Infrastructure.AI;
+using AiKnowledgeAssistant.Infrastructure.Persistence;
 using AiKnowledgeAssistant.Infrastructure.Search;
 using Azure;
 using Azure.AI.OpenAI;
 using Azure.Search.Documents;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace AiKnowledgeAssistant.Api
@@ -50,7 +52,18 @@ namespace AiKnowledgeAssistant.Api
                 return azureClient.GetChatClient(chatDeployment);
             });
 
+            services.AddInfrastructure(options =>
+            {
+                options.UseSqlServer(
+                    configuration.GetConnectionString("SqlServer"),
+                    sql =>
+                    {
+                        sql.MigrationsAssembly("AiKnowledgeAssistant.Api");
+                        sql.EnableRetryOnFailure();
+                    });
+            });
 
+            services.AddScoped<IFailureWindowResolver, FailureWindowResolver>();
             services.AddScoped<IAiClient, AzureOpenAiClient>();
             services.AddScoped<IAiEmbeddingClient, AzureOpenAiEmbeddingClient>();
             services.AddScoped<IFailureVectorStore, FailureVectorSearchStore>();

@@ -4,9 +4,7 @@ using AiKnowledgeAssistant.Infrastructure.Persistence.Entities;
 using AiKnowledgeAssistant.Infrastructure.Repositories.Interfaces;
 using AiKnowledgeAssistant.Infrastructure.Repositories.Models;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
+
 
 namespace AiKnowledgeAssistant.Infrastructure.Repositories
 {
@@ -31,7 +29,7 @@ namespace AiKnowledgeAssistant.Infrastructure.Repositories
         }
 
 
-        public async Task<IReadOnlyList<JobExecution>> GetFailureWindowAsync(
+    public async Task<IReadOnlyList<JobExecution>> GetFailureWindowAsync(
     string workflowId,
     string environment,
     DateTimeOffset fromTime,
@@ -40,7 +38,7 @@ namespace AiKnowledgeAssistant.Infrastructure.Repositories
         {
             DateTimeOffset lookbackStart = fromTime.Subtract(maxLookback);
 
-            // 1️⃣ Find the most recent SUCCESS before fromTime
+            // 1️ Find the most recent SUCCESS before fromTime
             DateTimeOffset? lastSuccessTime =
                 await _dbContext.JobExecutions
                     .AsNoTracking()

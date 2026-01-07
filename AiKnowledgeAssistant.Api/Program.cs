@@ -1,4 +1,6 @@
 using AiKnowledgeAssistant.Api;
+using AiKnowledgeAssistant.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +19,12 @@ builder.Services.AddSwaggerGen();
 
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<JobExecutionDbContext>();
+    dbContext.Database.Migrate();
+}
 app.UseDeveloperExceptionPage();
 
 

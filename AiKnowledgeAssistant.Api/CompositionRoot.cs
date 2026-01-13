@@ -55,7 +55,7 @@ namespace AiKnowledgeAssistant.Api
             services.AddInfrastructure(options =>
             {
                 options.UseSqlServer(
-                    configuration.GetConnectionString("SqlServer"),
+                    configuration.GetConnectionString("DefaultConnection"),
                     sql =>
                     {
                         sql.MigrationsAssembly("AiKnowledgeAssistant.Api");

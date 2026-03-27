@@ -70,7 +70,6 @@ namespace AiKnowledgeAssistant.Api
             services.AddScoped<IFailureVectorStore, FailureVectorSearchStore>();
             services.AddScoped<IFailureRetrievalService, FailureRetrievalService>();
             services.AddScoped<ITokenGuardrail, DefaultTokenGuardrail>();
-            services.AddScoped<IFailureRecordReader, FailureRecord>
             services.AddScoped<FailureOverviewService>();
         }
     }
